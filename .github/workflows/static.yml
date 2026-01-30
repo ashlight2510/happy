@@ -1,0 +1,40 @@
+name: Deploy 처음처럼 to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-happy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v4
+      - name: Prepare deploy
+        run: |
+          mkdir -p deploy
+          if [ -d happy ]; then
+            cp -r happy/* deploy/
+            [ -f happy/CNAME ] && cp happy/CNAME deploy/
+          else
+            for f in index.html CNAME .nojekyll; do [ -e "$f" ] && cp "$f" deploy/; done
+          fi
+          touch deploy/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
+      - id: deployment
+        uses: actions/deploy-pages@v4
