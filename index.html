@@ -485,13 +485,14 @@
       const list = document.getElementById("recordsList");
       list.innerHTML = records.length === 0
         ? '<p class="step-text muted">아직 기록이 없습니다.</p>'
-        : records.map(r => `
-          <div class="record-item" onclick="showRecord('${r.date}')">
+        : records.map(r => {
+          const preview = !r.skipped && r.answer ? r.answer.slice(0, 40).replace(/</g, '&lt;') + (r.answer.length > 40 ? '…' : '') : '';
+          return `<div class="record-item" data-date="${r.date}" onclick="showRecord(this.dataset.date)">
             <span class="date">${r.date}</span>
             ${r.skipped ? '<span style="color:var(--muted)">(넘김)</span>' : ''}
-            ${!r.skipped && r.answer ? `<div class="preview">${r.answer.slice(0, 40)}${r.answer.length > 40 ? '…' : ''}</div>` : ''}
-          </div>
-        `).join("");
+            ${preview ? `<div class="preview">${preview}</div>` : ''}
+          </div>`;
+        }).join("");
       document.getElementById("recordsModal").classList.add("show");
     }
 
@@ -499,10 +500,12 @@
       const r = records.find(x => x.date === date);
       if (!r) return;
       const list = document.getElementById("recordsList");
+      const safeQ = (r.question || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeA = (r.skipped ? '(넘김)' : r.answer || '(비어 있음)').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       list.innerHTML = `
         <div class="record-detail">
-          <div class="q">${r.question}</div>
-          <div class="a">${r.skipped ? '(넘김)' : r.answer || '(비어 있음)'}</div>
+          <div class="q">${safeQ}</div>
+          <div class="a">${safeA}</div>
         </div>
         <button class="btn ghost" onclick="viewRecords()">목록으로</button>
       `;
